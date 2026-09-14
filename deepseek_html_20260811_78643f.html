@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ember Lounge — Premium Order Suite</title>
+  <style>
+    :root {
+      --bg: #0B090A;
+      --panel: #161316;
+      --gold: #D4AF37;
+      --gold-bright: #F5DEB3;
+      --amber: #E7A94D;
+      --champagne: #EAE6DC;
+      --muted: #8B8478;
+      --line: rgba(212, 175, 55, 0.18);
+      --font-display: 'Cormorant Garamond', serif;
+      --font-body: 'Manrope', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --big-radius: 22px;
+      --btn-radius: 12px;
+      --touch-min: 52px;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--champagne);
+      overflow-x: hidden;
+      font-family: var(--font-body);
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+    #root { min-height: 100vh; min-height: 100dvh; }
+
+    /* Premium Glass */
+    .glass {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01));
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .glass-strong {
+      background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(212,175,55,0.25);
+    }
+
+    /* Buttons */
+    .btn-gold {
+      background: linear-gradient(135deg, #F5DEB3 0%, #D4AF37 50%, #B4942A 100%);
+      color: #0A0B08;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      border-radius: var(--btn-radius);
+      transition: all 0.25s cubic-bezier(0.2,0.8,0.2,1);
+      box-shadow: 0 8px 28px rgba(212,175,55,0.25);
+      letter-spacing: 0.4px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-gold::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.25) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform 0.6s;
+    }
+    .btn-gold:hover::after { transform: translateX(100%); }
+    .btn-gold:active { transform: scale(0.96); box-shadow: 0 4px 16px rgba(212,175,55,0.4); }
+    .btn-gold:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+    .big-btn {
+      min-height: var(--touch-min);
+      font-size: 17px;
+      padding: 15px 28px;
+      border-radius: var(--btn-radius);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-weight: 700;
+    }
+
+    /* Food cards */
+    .card-food {
+      border-radius: 18px;
+      padding: 18px;
+      cursor: pointer;
+      transition: all 0.25s;
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(22,19,22,0.95), rgba(11,9,10,0.95));
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 150px;
+      position: relative;
+    }
+    .card-food:active { transform: scale(0.97); border-color: var(--gold); box-shadow: 0 0 34px rgba(212,175,55,0.25); }
+    .card-food .emoji { font-size: 44px; line-height: 1; }
+    .card-food .name { font-size: 18px; font-weight: 600; color: var(--champagne); font-family: var(--font-display); font-style: italic; letter-spacing: 0.5px; }
+    .card-food .price { font-family: var(--font-mono); font-size: 19px; color: var(--gold-bright); font-weight: 700; }
+    .card-food .desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .qty-pill {
+      display: inline-flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,0.05); border-radius: 30px; padding: 7px 16px;
+      font-family: var(--font-mono); font-size: 15px;
+    }
+    .qty-pill button {
+      width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04); color: var(--champagne); cursor: pointer; font-size: 17px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Floating cart */
+    .floating-cart {
+      position: fixed; bottom: 24px; right: 24px; z-index: 200;
+      width: 68px; height: 68px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 28px; cursor: pointer; box-shadow: 0 14px 40px rgba(0,0,0,0.7), 0 0 0 2px rgba(212,175,55,0.4);
+    }
+    .floating-cart .badge {
+      position: absolute; top: -8px; right: -8px;
+      background: var(--amber); color: #0B0A08; font-size: 13px; font-weight: 800;
+      width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono);
+    }
+
+    /* Tab pills */
+    .tab-pill {
+      padding: 10px 22px; border-radius: 30px; font-weight: 600; font-size: 14px; cursor: pointer;
+      border: 1px solid var(--line); background: transparent; color: var(--muted); white-space: nowrap;
+      transition: all 0.2s; font-family: var(--font-body);
+    }
+    .tab-pill.active { background: rgba(212,175,55,0.2); border-color: var(--gold); color: var(--gold-bright); }
+
+    /* Chef timer */
+    .timer-select {
+      background: rgba(255,255,255,0.05); border: 1px solid var(--line); border-radius: 10px;
+      padding: 8px 12px; color: var(--champagne); font-family: var(--font-mono); font-size: 15px;
+      appearance: none; cursor: pointer; text-align: center;
+    }
+
+    /* Waiter cash badge */
+    .cash-badge {
+      background: #2E7D32; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 13px;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .online-badge {
+      background: #1565C0; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 13px;
+    }
+
+    /* Subtle pattern background */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image: radial-gradient(circle at 25% 25%, rgba(212,175,55,0.03) 1px, transparent 1px),
+                        radial-gradient(circle at 75% 75%, rgba(212,175,55,0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: -1;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/framer-motion@10/dist/framer-motion.js"></script>
+  <script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { motion, AnimatePresence } = window.Motion;
+    const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+    // ── CONFIG ──
+    const CONFIG = {
+      brandName: "Ember Lounge",
+      upiId: "krishnasuthar1@fam",
+      upiPayeeName: "Ember Lounge",
+      gstin: "27AABCG1234H1Z5",
+      cgstRate: 2.5, sgstRate: 2.5,
+      currency: "₹", maxTables: 12,
+      razorpayKeyId: "rzp_test_YourTestKeyHere",
+    };
+
+    // ── STORAGE ──
+    async function load(key, fallback) { try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; } catch (e) { return fallback; } }
+    async function save(key, data) { try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) {} }
+
+    function useSyncedData(key, fallback) {
+      const [data, setData] = useState(fallback);
+      const [ready, setReady] = useState(false);
+      useEffect(() => {
+        let m = true; const l = async () => { const d = await load(key, fallback); if (m) { setData(d); setReady(true); } };
+        l(); const iv = setInterval(l, 2000);
+        const onStorage = (e) => { if (e.key === key && e.newValue) { try { if (m) setData(JSON.parse(e.newValue)); } catch (er) {} } };
+        window.addEventListener("storage", onStorage);
+        return () => { m = false; clearInterval(iv); window.removeEventListener("storage", onStorage); };
+      }, [key]);
+      const update = useCallback(async (updater) => {
+        setData(prev => { const next = typeof updater === "function" ? updater(prev) : updater; save(key, next); return next; });
+      }, [key]);
+      return { data, setData: update, ready };
+    }
+
+    // ── MENU ──
+    const FULL_MENU = [
+      { id:"coffee", name:"Coffee", emoji:"☕", items:[
+        { id:"c1", name:"Velvet Espresso", price:220, desc:"Double-shot Ethiopian", emoji:"🫘", stock:50 },
+        { id:"c2", name:"Golden Cortado", price:260, desc:"Steamed milk + honey", emoji:"🍯", stock:40 },
+        { id:"c3", name:"Obsidian Pour-Over", price:240, desc:"Dark cacao notes", emoji:"🍫", stock:35 },
+        { id:"c4", name:"Saffron Latte", price:320, desc:"Kashmiri saffron", emoji:"🌸", stock:25 }
+      ]},
+      { id:"pastry", name:"Pastries", emoji:"🥐", items:[
+        { id:"p1", name:"Dark Chocolate Tart", price:280, desc:"70% couverture", emoji:"🍰", stock:20 },
+        { id:"p2", name:"Almond Croissant", price:180, desc:"48hr laminated", emoji:"🥐", stock:30 },
+        { id:"p3", name:"Pistachio Baklava", price:240, desc:"Rosewater syrup", emoji:"🥮", stock:15 },
+        { id:"p4", name:"Salted Caramel Éclair", price:210, desc:"Fleur de sel", emoji:"🍮", stock:18 }
+      ]},
+      { id:"savory", name:"Savory", emoji:"🍳", items:[
+        { id:"s1", name:"Truffle Mushroom Toast", price:340, desc:"Black truffle oil", emoji:"🍄", stock:22 },
+        { id:"s2", name:"Smoked Paneer Panini", price:300, desc:"Chipotle mayo", emoji:"🥪", stock:25 },
+        { id:"s3", name:"Herb Focaccia Board", price:380, desc:"Whipped butter", emoji:"🫒", stock:12 },
+        { id:"s4", name:"Burrata Crostini", price:360, desc:"Heirloom tomato", emoji:"🍅", stock:16 }
+      ]},
+      { id:"cold", name:"Cold Brews", emoji:"🧊", items:[
+        { id:"d1", name:"Amber Nitro Brew", price:260, desc:"Nitrogen cascade", emoji:"🌊", stock:30 },
+        { id:"d2", name:"Rose Cardamom Cooler", price:230, desc:"House rose syrup", emoji:"🌹", stock:28 },
+        { id:"d3", name:"Charcoal Lemonade", price:200, desc:"Activated charcoal", emoji:"🖤", stock:20 },
+        { id:"d4", name:"Honey Oat Cold Brew", price:270, desc:"Slow-steeped", emoji:"🍯", stock:24 }
+      ]}
+    ];
+
+    // ── HELPERS ──
+    function genId() { return "ord_"+Date.now()+"_"+Math.random().toString(36).slice(2,6); }
+    function playSound(type="chime") { try { const ctx=new (window.AudioContext||window.webkitAudioContext)(); const now=ctx.currentTime; if(type==="chime"){[880,1318.5,1760].forEach((f,i)=>{const osc=ctx.createOscillator(),gain=ctx.createGain(); osc.type="sine"; osc.frequency.value=f; osc.connect(gain); gain.connect(ctx.destination); const s=now+i*0.1; gain.gain.setValueAtTime(0,s); gain.gain.linearRampToValueAtTime(0.18,s+0.02); gain.gain.exponentialRampToValueAtTime(0.0001,s+1.1); osc.start(s); osc.stop(s+1.2);});}else if(type==="ding"){const osc=ctx.createOscillator(),gain=ctx.createGain(); osc.type="sine"; osc.frequency.value=1200; osc.connect(gain); gain.connect(ctx.destination); gain.gain.setValueAtTime(0,now); gain.gain.linearRampToValueAtTime(0.3,now+0.05); gain.gain.exponentialRampToValueAtTime(0.0001,now+0.5); osc.start(now); osc.stop(now+0.5);} } catch(e){} }
+    function fmtTime(sec) { sec=Math.max(0,Math.round(sec)); const m=Math.floor(sec/60),s=sec%60; return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`; }
+    function useCountdown(started,eta) { const [left,setLeft]=useState(()=>started?eta-(Date.now()-started)/1000:eta); useEffect(()=>{if(!started)return; const iv=setInterval(()=>setLeft(Math.max(0,eta-(Date.now()-started)/1000)),300); return()=>clearInterval(iv);},[started,eta]); return left; }
+    function qrCodeUrl(data,size=180){return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}`;}
+    function isMobile(){return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||"");}
+    function buildUpiUri(amount,orderId){ const p=new URLSearchParams({pa:CONFIG.upiId, pn:CONFIG.upiPayeeName, am:String(amount), cu:"INR", tn:orderId?`Order ${orderId}`:"Ember Lounge Order"}); return `upi://pay?${p.toString()}`; }
+    function generateInvoice(order){ const subtotal=order.items.reduce((s,i)=>s+i.price*i.qty,0); const cgst=Math.round(subtotal*CONFIG.cgstRate/100); const sgst=Math.round(subtotal*CONFIG.sgstRate/100); const total=subtotal+cgst+sgst; return {invoiceNo:"INV-"+String(Date.now()).slice(-8), date:new Date().toLocaleDateString("en-IN"), subtotal,cgst,sgst,total,gstin:CONFIG.gstin, items:order.items, tableId:order.tableId, orderId:order.id, paymentMethod:order.paymentMethod}; }
+
+    const STATUS_MAP = { pending:{label:"⏳ Awaiting",color:"#8B8478"}, approved:{label:"✅ Approved",color:"#F5DEB3"}, preparing:{label:"👨‍🍳 Cooking",color:"#D4AF37"}, ready:{label:"🔔 Ready!",color:"#E7A94D"}, delivered:{label:"🎉 Delivered",color:"#F5DEB3"}, completed:{label:"✅ Done",color:"#5A5650"} };
+    function StatusBadge({status,large}){ const s=STATUS_MAP[status]||STATUS_MAP.pending; return <span style={{display:"inline-flex",alignItems:"center",gap:6,padding:large?"8px 16px":"4px 10px",borderRadius:20,background:s.color+"22",border:`1px solid ${s.color}44`,color:s.color,fontSize:large?15:11,fontWeight:600,fontFamily:"var(--font-mono)"}}>{s.label}</span>; }
+
+    function ConfettiBurst(){ const pieces=useMemo(()=>Array.from({length:50}).map((_,i)=>({id:i,x:Math.random()*100,delay:Math.random()*0.5,dur:1.8+Math.random()*1.5,rot:Math.random()*720,color:["#D4AF37","#E7A94D","#EAE6DC","#F5DEB3"][i%4],size:6+Math.random()*8})),[]); return <div style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:999,overflow:"hidden"}}>{pieces.map(p=><motion.div key={p.id} initial={{left:`${p.x}vw`,top:-20,opacity:1,rotate:0}} animate={{top:"110vh",rotate:p.rot,opacity:[1,1,0]}} transition={{duration:p.dur,delay:p.delay,ease:"easeIn"}} style={{position:"absolute",width:p.size,height:p.size*0.5,background:p.color,borderRadius:2}}/>)}</div>; }
+
+    // ── COMPONENTS ──
+    function FoodCard({item,onAdd,stock}){
+      const outOfStock = stock!==undefined && stock<=0;
+      return (
+        <motion.div className="card-food" onClick={()=>{if(!outOfStock){playSound("ding");onAdd(item);}}} whileTap={{scale:outOfStock?1:0.95}} style={{opacity:outOfStock?0.45:1,cursor:outOfStock?"default":"pointer"}}>
+          <div className="emoji">{item.emoji||"🍽️"}</div>
+          <div className="name">{item.name}</div>
+          <div className="desc">{item.desc}</div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span className="price">{CONFIG.currency}{item.price}</span>
+            {outOfStock?<span style={{color:"#E7A94D",fontSize:11,fontWeight:700}}>OUT OF STOCK</span>:<span style={{background:"var(--gold)",color:"#0a0d04",borderRadius:20,padding:"5px 12px",fontSize:11,fontWeight:700}}>+ADD</span>}
+          </div>
+        </motion.div>
+      );
+    }
+
+    function CartItemRow({item,onQty}){
+      return (
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:"1px solid var(--line)"}}>
+          <div>
+            <div style={{fontSize:15,fontWeight:600,color:"var(--champagne)"}}>{item.emoji} {item.name}</div>
+            <div style={{fontFamily:"var(--font-mono)",color:"var(--gold)",fontSize:13}}>{CONFIG.currency}{item.price} × {item.qty} = {CONFIG.currency}{item.price*item.qty}</div>
+          </div>
+          <div className="qty-pill">
+            <button onClick={()=>onQty(item.id,-1)}>−</button>
+            <span style={{minWidth:18,textAlign:"center"}}>{item.qty}</span>
+            <button onClick={()=>onQty(item.id,1)}>+</button>
+          </div>
+        </div>
+      );
+    }
+
+    function CartDrawer({open,cart,notes,onNotesChange,onClose,onQty,onPlaceOrder,inventory}){
+      const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
+      const cgst=Math.round(total*CONFIG.cgstRate/100), sgst=Math.round(total*CONFIG.sgstRate/100), grandTotal=total+cgst+sgst;
+      const hasOOS=cart.some(i=>{const s=inventory[i.id]; return s!==undefined&&s<=0;});
+      return <AnimatePresence>{open&&<>
+        <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(4,4,6,0.7)",zIndex:500}}/>
+        <motion.div initial={{x:"100%"}} animate={{x:0}} exit={{x:"100%"}} transition={{type:"spring",damping:28,stiffness:260}} className="glass-strong" style={{position:"fixed",top:0,right:0,bottom:0,width:"min(400px,94vw)",zIndex:501,padding:24,display:"flex",flexDirection:"column",borderLeft:"1px solid var(--line)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+            <div style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:28,color:"var(--champagne)"}}>🛒 Your Order</div>
+            <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:24,cursor:"pointer"}}>×</button>
+          </div>
+          {cart.length===0?<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:"var(--muted)",fontSize:15}}>Your cart is empty 🫙</div>:
+          <div style={{flex:1,overflowY:"auto"}}>
+            {cart.map(i=><CartItemRow key={i.id} item={i} onQty={onQty}/>)}
+            <textarea value={notes} onChange={e=>onNotesChange(e.target.value)} placeholder="Special instructions..." rows={2} style={{width:"100%",resize:"none",background:"rgba(255,255,255,0.03)",border:"1px solid var(--line)",borderRadius:10,padding:"10px 12px",color:"var(--champagne)",fontSize:13,marginTop:8}}/>
+            <div style={{marginTop:10,padding:"10px 0",borderTop:"1px solid var(--line)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"var(--muted)"}}><span>Subtotal</span><span style={{fontFamily:"var(--font-mono)"}}>{CONFIG.currency}{total}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"var(--muted)"}}><span>CGST @{CONFIG.cgstRate}%</span><span style={{fontFamily:"var(--font-mono)"}}>{CONFIG.currency}{cgst}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"var(--muted)"}}><span>SGST @{CONFIG.sgstRate}%</span><span style={{fontFamily:"var(--font-mono)"}}>{CONFIG.currency}{sgst}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:16,fontWeight:700,color:"var(--gold-bright)",marginTop:4}}><span>Total</span><span style={{fontFamily:"var(--font-mono)"}}>{CONFIG.currency}{grandTotal}</span></div>
+            </div>
+          </div>}
+          <div style={{paddingTop:12,borderTop:"1px solid var(--line)"}}>
+            {hasOOS&&<div style={{color:"var(--amber)",fontSize:12,marginBottom:8,textAlign:"center"}}>⚠️ Some items out of stock</div>}
+            <motion.button whileTap={{scale:0.96}} disabled={cart.length===0||hasOOS} onClick={onPlaceOrder} className="btn-gold big-btn" style={{width:"100%",fontSize:17,padding:"16px 0",borderRadius:14}}>💳 Pay {CONFIG.currency}{grandTotal}</motion.button>
+          </div>
+        </motion.div>
+      </>}</AnimatePresence>;
+    }
+
+    function PaymentModal({open,total,orderIdHint,onClose,onPayCash,onPayOnline,onPayUPI}){
+      const [method,setMethod]=useState(null); const [razorpayLoading,setRazorpayLoading]=useState(false);
+      const cgst=Math.round(total*CONFIG.cgstRate/100), sgst=Math.round(total*CONFIG.sgstRate/100), grandTotal=total+cgst+sgst;
+      const upiUri=useMemo(()=>buildUpiUri(grandTotal,orderIdHint),[grandTotal,orderIdHint]);
+      const qrSrc=useMemo(()=>qrCodeUrl(upiUri,170),[upiUri]);
+      const mobile=useMemo(()=>isMobile(),[]);
+      useEffect(()=>{if(!open)setMethod(null);},[open]);
+      const handleRazorpay=()=>{setRazorpayLoading(true); const opts={key:CONFIG.razorpayKeyId,amount:grandTotal*100,currency:"INR",name:CONFIG.brandName,description:`Order ${orderIdHint||""}`,theme:{color:"#D4AF37"},handler:r=>{setRazorpayLoading(false);onPayOnline(r.razorpay_payment_id);},modal:{ondismiss:()=>setRazorpayLoading(false)}}; try{new window.Razorpay(opts).open();}catch(e){setRazorpayLoading(false);onPayOnline("simulated_"+Date.now());}};
+      return <AnimatePresence>{open&&<>
+        <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(4,4,6,0.8)",zIndex:510,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+          <motion.div initial={{opacity:0,scale:0.9,y:16}} animate={{opacity:1,scale:1,y:0}} exit={{opacity:0,scale:0.9,y:16}} onClick={e=>e.stopPropagation()} className="glass-strong" style={{width:"min(380px,94vw)",maxHeight:"90vh",overflowY:"auto",borderRadius:24,padding:24,margin:"auto"}}>
+            <button onClick={onClose} style={{position:"absolute",top:14,right:18,background:"none",border:"none",color:"var(--muted)",fontSize:22,cursor:"pointer"}}>×</button>
+            <div style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:28,color:"var(--champagne)",marginBottom:4}}>💰 Payment</div>
+            <div style={{color:"var(--muted)",fontSize:13,marginBottom:16}}>Total: <strong style={{color:"var(--gold-bright)",fontSize:18}}>{CONFIG.currency}{grandTotal}</strong> (incl. GST)</div>
+            {!method?<div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <motion.button whileTap={{scale:0.96}} onClick={handleRazorpay} disabled={razorpayLoading} className="btn-gold big-btn" style={{width:"100%",borderRadius:14,fontSize:16,padding:"16px 0"}}>💳 {razorpayLoading?"Opening...":"Pay with Card / UPI / Wallet"}</motion.button>
+              <motion.button whileTap={{scale:0.96}} onClick={()=>setMethod("upi-qr")} className="glass big-btn" style={{width:"100%",borderRadius:14,fontSize:15,padding:"14px 0",border:"1px solid var(--line)",color:"var(--champagne)",cursor:"pointer"}}>📱 Scan UPI QR</motion.button>
+              <motion.button whileTap={{scale:0.96}} onClick={()=>setMethod("cash")} className="glass big-btn" style={{width:"100%",borderRadius:14,fontSize:15,padding:"14px 0",border:"1px solid var(--line)",color:"var(--champagne)",cursor:"pointer"}}>💵 Pay Cash at Counter</motion.button>
+            </div>:method==="upi-qr"?<div style={{textAlign:"center"}}>
+              <img src={qrSrc} alt="UPI QR" width={160} height={160} style={{borderRadius:14,background:"#fff",padding:8,marginBottom:8}}/>
+              <div style={{color:"var(--muted)",fontSize:11,marginBottom:6}}>Scan with any UPI app</div>
+              <div style={{fontFamily:"var(--font-mono)",fontSize:14,color:"var(--gold-bright)",marginBottom:12}}>{CONFIG.upiId}</div>
+              {mobile&&<motion.button whileTap={{scale:0.96}} onClick={()=>{window.location.href=upiUri;}} className="btn-gold big-btn" style={{width:"100%",borderRadius:14,padding:"12px 0",marginBottom:8}}>📲 Open UPI App</motion.button>}
+              <motion.button whileTap={{scale:0.96}} onClick={()=>onPayUPI()} className="btn-gold big-btn" style={{width:"100%",borderRadius:14,padding:"12px 0"}}>✅ I've Paid</motion.button>
+              <button onClick={()=>setMethod(null)} style={{background:"none",border:"none",color:"var(--muted)",fontSize:12,marginTop:10,cursor:"pointer"}}>← Back</button>
+            </div>:method==="cash"?<div style={{textAlign:"center"}}>
+              <div style={{fontSize:50,marginBottom:10}}>💵</div>
+              <div style={{color:"var(--champagne)",fontSize:15,marginBottom:14}}>Please pay <strong>{CONFIG.currency}{grandTotal}</strong> at the counter.</div>
+              <motion.button whileTap={{scale:0.96}} onClick={onPayCash} className="btn-gold big-btn" style={{width:"100%",borderRadius:14,padding:"14px 0"}}>✅ Confirm Cash Payment</motion.button>
+              <button onClick={()=>setMethod(null)} style={{background:"none",border:"none",color:"var(--muted)",fontSize:12,marginTop:10,cursor:"pointer"}}>← Back</button>
+            </div>:null}
+          </motion.div>
+        </motion.div>
+      </>}</AnimatePresence>;
+    }
+
+    function ActiveOrderBar({order,onExpand}){
+      const remaining=useCountdown(order.startedAt,order.etaSeconds||0);
+      const s=STATUS_MAP[order.status]||STATUS_MAP.pending;
+      return <motion.div initial={{y:100,opacity:0}} animate={{y:0,opacity:1}} exit={{y:100,opacity:0}} onClick={onExpand} className="glass-strong" style={{position:"fixed",left:"50%",transform:"translateX(-50%)",bottom:20,width:"min(520px,92vw)",borderRadius:20,padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",zIndex:60}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:22}}>{order.status==="delivered"?"🎉":order.status==="ready"?"🔔":"⏳"}</span>
+          <div><div style={{color:s.color,fontSize:14,fontWeight:700}}>{s.label}</div><div style={{color:"var(--muted)",fontSize:11,fontFamily:"var(--font-mono)"}}>Order #{order.id.slice(-5)} · Table {order.tableId}</div></div>
+        </div>
+        {order.status==="preparing"&&<div style={{fontFamily:"var(--font-mono)",color:"var(--gold-bright)",fontSize:22,fontWeight:700}}>{fmtTime(remaining)}</div>}
+        {order.status==="ready"&&<div style={{color:"var(--amber)",fontSize:13,fontWeight:600}}>TAP →</div>}
+      </motion.div>;
+    }
+
+    function TrackerView({order,onCollapse,onAcknowledge,onViewInvoice}){
+      const remaining=useCountdown(order.startedAt,order.etaSeconds||0);
+      const invoice=useMemo(()=>generateInvoice(order),[order]);
+      return <div style={{maxWidth:560,margin:"0 auto",padding:"20px 20px 100px"}}>
+        <button onClick={onCollapse} style={{background:"none",border:"none",color:"var(--muted)",fontFamily:"var(--font-mono)",fontSize:13,cursor:"pointer",marginBottom:10}}>← Back to menu</button>
+        <div className="glass-strong" style={{borderRadius:24,padding:24,textAlign:"center"}}>
+          <div style={{fontFamily:"var(--font-mono)",letterSpacing:2,fontSize:11,color:"var(--muted)",marginBottom:12}}>TABLE {order.tableId} · ORDER #{order.id.slice(-5)} · {order.paymentMethod==="cash"?"💵 Cash":"💳 Online"}</div>
+          {order.status==="delivered"?<><div style={{fontSize:60,margin:"10px 0"}}>🎉</div><div style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:32,color:"var(--amber)"}}>Delivered — Enjoy!</div></>:order.status==="ready"?<><div style={{fontSize:60,margin:"10px 0"}}>🔔</div><div style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:26,color:"var(--gold-bright)"}}>Ready — Coming to your table!</div></>:<><div style={{fontFamily:"var(--font-mono)",fontSize:44,color:"var(--gold-bright)",margin:"14px 0",textShadow:"0 0 30px rgba(212,175,55,0.5)"}}>{order.status==="preparing"?fmtTime(remaining):"⏳"}</div><StatusBadge status={order.status} large/></>}
+          {order.notes&&<div style={{textAlign:"left",marginTop:16,color:"var(--muted)",fontSize:12,fontStyle:"italic",background:"rgba(255,255,255,0.03)",padding:10,borderRadius:10}}>📝 {order.notes}</div>}
+          <div style={{textAlign:"left",marginTop:20,borderTop:"1px solid var(--line)",paddingTop:16}}>
+            {order.items.map(i=><div key={i.id} style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"var(--muted)",marginBottom:6}}><span>{i.qty} × {i.name}</span><span style={{fontFamily:"var(--font-mono)",color:"var(--champagne)"}}>{CONFIG.currency}{i.price*i.qty}</span></div>)}
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:10,borderTop:"1px solid var(--line)"}}><span style={{color:"var(--muted)",fontSize:13}}>Total (incl. GST)</span><span style={{fontFamily:"var(--font-mono)",color:"var(--gold-bright)",fontSize:16,fontWeight:700}}>{CONFIG.currency}{invoice.total}</span></div>
+          </div>
+          {order.status==="delivered"&&<div style={{display:"flex",gap:10,marginTop:18,flexWrap:"wrap"}}>
+            <motion.button whileTap={{scale:0.95}} onClick={onAcknowledge} className="btn-gold big-btn" style={{flex:1,minWidth:120,borderRadius:14,padding:"12px 0",fontSize:14}}>✅ Got it, thanks!</motion.button>
+            <motion.button whileTap={{scale:0.95}} onClick={onViewInvoice} className="glass big-btn" style={{flex:1,minWidth:120,borderRadius:14,padding:"12px 0",fontSize:13,border:"1px solid var(--line)",color:"var(--champagne)",cursor:"pointer"}}>🧾 Invoice</motion.button>
+          </div>}
+        </div>
+      </div>;
+    }
+
+    // ── STAFF COMPONENTS ──
+    function ChefOrderCard({order,onStart,onMarkReady}){
+      const remaining=useCountdown(order.startedAt,order.etaSeconds||0);
+      const [mins,setMins]=useState(15);
+      const [editing,setEditing]=useState(false);
+      return <div className="glass-strong" style={{borderRadius:18,padding:18,display:"flex",justifyContent:"space-between",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+        <div style={{flex:1,minWidth:150}}>
+          <div style={{fontFamily:"var(--font-mono)",fontSize:11,color:"var(--muted)"}}>Table {order.tableId} · #{order.id.slice(-5)}</div>
+          <div style={{color:"var(--champagne)",fontSize:14,marginTop:4}}>{order.items.map(i=>`${i.qty}× ${i.name}`).join(", ")}</div>
+          {order.notes&&<div style={{color:"var(--gold-bright)",fontSize:11,fontStyle:"italic",marginTop:4}}>📝 {order.notes}</div>}
+        </div>
+        {order.status==="approved"&&!editing?<motion.button whileTap={{scale:0.95}} onClick={()=>setEditing(true)} className="btn-gold" style={{border:"none",borderRadius:12,padding:"12px 18px",fontWeight:700,fontSize:14,cursor:"pointer",flexShrink:0}}>⏱ Set Timer</motion.button>:
+        order.status==="approved"&&editing?<div style={{display:"flex",gap:8,alignItems:"center",flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(255,255,255,0.05)",borderRadius:10,padding:"4px"}}>
+            <button onClick={()=>setMins(Math.max(1,mins-5))} style={{background:"none",border:"none",color:"var(--gold)",fontSize:18,cursor:"pointer",padding:"0 8px"}}>−</button>
+            <span style={{fontFamily:"var(--font-mono)",fontSize:18,minWidth:30,textAlign:"center"}}>{mins}</span>
+            <button onClick={()=>setMins(mins+5)} style={{background:"none",border:"none",color:"var(--gold)",fontSize:18,cursor:"pointer",padding:"0 8px"}}>+</button>
+          </div>
+          <motion.button whileTap={{scale:0.95}} onClick={()=>{onStart(order.id,mins);setEditing(false);}} className="btn-gold" style={{border:"none",borderRadius:10,padding:"10px 16px",fontWeight:700,fontSize:13,cursor:"pointer"}}>Start</motion.button>
+        </div>:
+        order.status==="preparing"?<div style={{display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
+          <span style={{fontFamily:"var(--font-mono)",color:"var(--gold-bright)",fontSize:22,fontWeight:700}}>{fmtTime(remaining)}</span>
+          <motion.button whileTap={{scale:0.95}} onClick={()=>onMarkReady(order.id)} className="btn-gold" style={{border:"none",borderRadius:10,padding:"10px 16px",fontWeight:700,fontSize:13,cursor:"pointer"}}>✅ Ready</motion.button>
+        </div>:null}
+      </div>;
+    }
+
+    function WaiterOrderCard({order,onMarkDelivered}){
+      return <div className="glass-strong" style={{borderRadius:18,padding:18,display:"flex",justifyContent:"space-between",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+        <div style={{flex:1,minWidth:150}}>
+          <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4}}>
+            <span style={{fontFamily:"var(--font-mono)",fontSize:12,color:"var(--muted)"}}>Table {order.tableId} · #{order.id.slice(-5)}</span>
+            {order.paymentMethod==="cash"?<span className="cash-badge">💵 CASH</span>:<span className="online-badge">💳 ONLINE</span>}
+          </div>
+          <div style={{color:"var(--champagne)",fontSize:14,marginTop:4}}>{order.items.map(i=>`${i.qty}× ${i.name}`).join(", ")}</div>
+          {order.notes&&<div style={{color:"var(--gold-bright)",fontSize:11,fontStyle:"italic",marginTop:4}}>📝 {order.notes}</div>}
+        </div>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+          <StatusBadge status={order.status}/>
+          {order.status==="ready"&&<motion.button whileTap={{scale:0.95}} onClick={()=>onMarkDelivered(order.id)} className="btn-gold" style={{border:"none",borderRadius:10,padding:"10px 18px",fontWeight:700,fontSize:13,cursor:"pointer",marginTop:4}}>✅ Mark Delivered</motion.button>}
+        </div>
+      </div>;
+    }
+
+    // ── MAIN APP ──
+    function App(){
+      const {data:orders,setData:setOrders,ready:ordersReady}=useSyncedData("ember-orders-v3",[]);
+      const {data:inventory,setData:setInventory,ready:invReady}=useSyncedData("ember-inventory-v3",{});
+      const {data:loyalty,setData:setLoyalty}=useSyncedData("ember-loyalty-v3",{points:0,visits:0});
+
+      const [entered,setEntered]=useState(false); const [tableId,setTableId]=useState(null);
+      const [scanningTable,setScanningTable]=useState(null); const [view,setView]=useState("landing");
+      const [cart,setCart]=useState([]); const [orderNotes,setOrderNotes]=useState("");
+      const [cartOpen,setCartOpen]=useState(false); const [scanOpen,setScanOpen]=useState(false);
+      const [activeOrderId,setActiveOrderId]=useState(null); const [confetti,setConfetti]=useState(false);
+      const [payModal,setPayModal]=useState(false); const [pendingCart,setPendingCart]=useState(null);
+      const [pendingNotes,setPendingNotes]=useState(""); const [invoiceView,setInvoiceView]=useState(null);
+      const [staffRole,setStaffRole]=useState(null); const [showLogin,setShowLogin]=useState(false);
+      const [pw,setPw]=useState(""); const [loginErr,setLoginErr]=useState("");
+      const [showAnalytics,setShowAnalytics]=useState(false);
+      const [activeCat,setActiveCat]=useState("all");
+      const filteredMenu=activeCat==="all"?FULL_MENU.flatMap(c=>c.items):(FULL_MENU.find(c=>c.id===activeCat)?.items||[]);
+
+      const activeOrder=orders.find(o=>o.id===activeOrderId)||null;
+      const cartCount=cart.reduce((s,i)=>s+i.qty,0);
+      const pendingTotal=pendingCart?pendingCart.reduce((s,i)=>s+i.price*i.qty,0):0;
+      const loyaltyPoints=loyalty.points||0;
+      const seenDelivered=useRef(new Set()); const autoTableDone=useRef(false); const cartIconRef=useRef(null);
+
+      useEffect(()=>{if(invReady&&Object.keys(inventory).length===0){const init={}; FULL_MENU.forEach(c=>c.items.forEach(i=>{init[i.id]=i.stock;})); setInventory(init);}},[invReady]);
+      useEffect(()=>{if(autoTableDone.current)return; autoTableDone.current=true; try{const n=parseInt(new URLSearchParams(window.location.search).get("table"),10); if(n>=1&&n<=CONFIG.maxTables){setEntered(true);handleSelectTable(n);}}catch(e){}},[]);
+      useEffect(()=>{if(!activeOrder||activeOrder.status!=="delivered")return; if(!seenDelivered.current.has(activeOrder.id)){seenDelivered.current.add(activeOrder.id);setConfetti(true);playSound("chime");setTimeout(()=>setConfetti(false),2800);}},[activeOrder]);
+
+      const handleSelectTable=useCallback(n=>{setScanningTable(n);setTimeout(()=>{setTableId(n);setScanningTable(null);setView("menu");},1400);},[]);
+      const handleAdd=useCallback(item=>{const stock=inventory[item.id]; if(stock!==undefined&&stock<=0)return; playSound("ding"); setCart(prev=>{const idx=prev.findIndex(p=>p.id===item.id); if(idx>=0){const n=[...prev];n[idx]={...n[idx],qty:n[idx].qty+1};return n;} return[...prev,{...item,qty:1}];});},[inventory]);
+      const handleQty=useCallback((id,d)=>{setCart(prev=>prev.map(i=>i.id===id?{...i,qty:i.qty+d}:i).filter(i=>i.qty>0));},[]);
+      const handlePlaceOrder=()=>{if(cart.length===0)return; const hasOOS=cart.some(i=>{const s=inventory[i.id];return s!==undefined&&s<=0;}); if(hasOOS)return; setPendingCart([...cart]);setPendingNotes(orderNotes);setPayModal(true);setCartOpen(false);};
+      const finalizeOrder=async(method,ref=null)=>{if(!pendingCart)return; const order={id:genId(),tableId,items:pendingCart.map(i=>({id:i.id,name:i.name,price:i.price,qty:i.qty,emoji:i.emoji})),notes:pendingNotes||"",status:"pending",createdAt:Date.now(),updatedAt:Date.now(),etaSeconds:0,startedAt:null,paymentMethod:method,paymentRef:ref}; const next=[...orders,order]; await setOrders(next); const newInv={...inventory}; pendingCart.forEach(i=>{if(newInv[i.id]!==undefined)newInv[i.id]=Math.max(0,newInv[i.id]-i.qty);}); await setInventory(newInv); const newLoy={points:(loyalty.points||0)+Math.round(pendingTotal*0.05),visits:(loyalty.visits||0)+1}; await setLoyalty(newLoy); setActiveOrderId(order.id);setCart([]);setOrderNotes("");setPendingCart(null);setPendingNotes("");setPayModal(false);playSound("chime");};
+      const handleAcknowledge=async()=>{if(!activeOrder)return; const next=orders.map(o=>o.id===activeOrder.id?{...o,status:"completed",updatedAt:Date.now()}:o); await setOrders(next); setActiveOrderId(null);setView("menu");};
+      const handleApprove=async(id)=>{const next=orders.map(o=>o.id===id?{...o,status:"approved",updatedAt:Date.now()}:o);await setOrders(next);};
+      const handleStartPrep=async(id,mins)=>{const next=orders.map(o=>o.id===id?{...o,status:"preparing",etaSeconds:mins*60,startedAt:Date.now(),updatedAt:Date.now()}:o);await setOrders(next);};
+      const handleMarkReady=async(id)=>{const next=orders.map(o=>o.id===id?{...o,status:"ready",updatedAt:Date.now()}:o);await setOrders(next);};
+      const handleMarkDelivered=async(id)=>{const next=orders.map(o=>o.id===id?{...o,status:"delivered",updatedAt:Date.now()}:o);await setOrders(next);};
+      const handleLogin=()=>{const creds={admin:"admin123",chef:"chef123",waiter:"waiter123"}; const role=Object.keys(creds).find(k=>creds[k]===pw); if(role){setStaffRole(role);setShowLogin(false);setPw("");setLoginErr("");}else{setLoginErr("Wrong password");}};
+
+      // STAFF VIEWS
+      if(staffRole==="admin"){
+        const pending=orders.filter(o=>o.status==="pending"); const rest=orders.filter(o=>o.status!=="pending").slice(-15).reverse();
+        return <div style={{minHeight:"100vh",background:"var(--bg)"}}>
+          <div style={{position:"sticky",top:0,zIndex:40,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",background:"rgba(11,9,10,0.9)",backdropFilter:"blur(14px)",borderBottom:"1px solid var(--line)"}}>
+            <span style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:20,color:"var(--gold-bright)"}}>{CONFIG.brandName} Admin</span>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>setShowAnalytics(v=>!v)} className="glass" style={{padding:"6px 14px",borderRadius:20,border:"1px solid var(--line)",color:"var(--gold-bright)",cursor:"pointer",fontSize:12}}>{showAnalytics?"Hide":"📊 Analytics"}</button>
+              <button onClick={()=>setStaffRole(null)} className="glass" style={{padding:"6px 14px",borderRadius:20,border:"1px solid var(--line)",color:"var(--muted)",cursor:"pointer",fontSize:12}}>Logout</button>
+            </div>
+          </div>
+          <div style={{maxWidth:760,margin:"0 auto",padding:"20px 20px 80px"}}>
+            {showAnalytics&&<AnalyticsPanel orders={orders} inventory={inventory}/>}
+            <div style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:26,color:"var(--champagne)",marginBottom:16}}>⏳ Pending Approvals ({pending.length})</div>
+            {pending.length===0?<div className="glass" style={{borderRadius:16,padding:20,textAlign:"center",color:"var(--muted)",fontSize:13}}>No pending orders 🎉</div>:
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
+              {pending.map(o=><div key={o.id} className="glass" style={{borderRadius:16,padding:16,display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+                <div>
+                  <div style={{fontFamily:"var(--font-mono)",fontSize:11,color:"var(--muted)"}}>Table {o.tableId} · #{o.id.slice(-5)} · {o.paymentMethod==="cash"?"💵 Cash":"💳 Online"}</div>
+                  <div style={{color:"var(--champagne)",fontSize:13,marginTop:3}}>{o.items.map(i=>`${i.qty}× ${i.name}`).join(", ")}</div>
+                  {o.notes&&<div style={{color:"var(--gold-bright)",fontSize:11,fontStyle:"italic",marginTop:2}}>📝 {o.notes}</div>}
+                </div>
+                <motion.button whileTap={{scale:0.94}} onClick={()=>handleApprove(o.id)} className="btn-gold" style={{border:"none",borderRadius:12,padding:"10px 16px",fontWeight:700,fontSize:13,cursor:"pointer",flexShrink:0}}>✅ Approve</motion.button>
+              </div>)}
+            </div>}
+            <div style={{fontFamily:"var(--font-mono)",fontSize:11,letterSpacing:2,color:"var(--muted)",marginBottom:10}}>RECENT ACTIVITY</div>
+            {rest.map(o=><div key={o.id} className="glass" style={{borderRadius:12,padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+              <span style={{color:"var(--muted)",fontSize:12,fontFamily:"var(--font-mono)"}}>T{o.tableId} · #{o.id.slice(-5)}</span>
+              <StatusBadge status={o.status}/>
+            </div>)}
+          </div>
+        </div>;
+      }
+
+      if(staffRole==="chef"){
+        const approved=orders.filter(o=>o.status==="approved"); const preparing=orders.filter(o=>o.status==="preparing");
+        const list=[...approved,...preparing];
+        return <div style={{minHeight:"100vh",background:"var(--bg)"}}>
+          <div style={{position:"sticky",top:0,zIndex:40,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",background:"rgba(11,9,10,0.9)",backdropFilter:"blur(14px)",borderBottom:"1px solid var(--line)"}}>
+            <span style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:20,color:"var(--gold-bright)"}}>👨‍🍳 Kitchen</span>
+            <button onClick={()=>setStaffRole(null)} className="glass" style={{padding:"6px 14px",borderRadius:20,border:"1px solid var(--line)",color:"var(--muted)",cursor:"pointer",fontSize:12}}>Logout</button>
+          </div>
+          <div style={{maxWidth:760,margin:"0 auto",padding:"20px 20px 80px"}}>
+            {list.length===0?<div className="glass" style={{borderRadius:16,padding:24,textAlign:"center",color:"var(--muted)",fontSize:14}}>No active tickets 🍽️</div>:
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              {list.map(o=><ChefOrderCard key={o.id} order={o} onStart={handleStartPrep} onMarkReady={handleMarkReady}/>)}
+            </div>}
+          </div>
+        </div>;
+      }
+
+      if(staffRole==="waiter"){
+        const list=orders.filter(o=>o.status!=="completed"&&o.status!=="pending"&&o.status!=="approved").slice().reverse();
+        return <div style={{minHeight:"100vh",background:"var(--bg)"}}>
+          <div style={{position:"sticky",top:0,zIndex:40,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",background:"rgba(11,9,10,0.9)",backdropFilter:"blur(14px)",borderBottom:"1px solid var(--line)"}}>
+            <span style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:20,color:"var(--gold-bright)"}}>🏃 Waiter</span>
+            <button onClick={()=>setStaffRole(null)} className="glass" style={{padding:"6px 14px",borderRadius:20,border:"1px solid var(--line)",color:"var(--muted)",cursor:"pointer",fontSize:12}}>Logout</button>
+          </div>
+          <div style={{maxWidth:760,margin:"0 auto",padding:"20px 20px 80px"}}>
+            {list.length===0?<div className="glass" style={{borderRadius:16,padding:24,textAlign:"center",color:"var(--muted)",fontSize:14}}>No active orders 📭</div>:
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              {list.map(o=><WaiterOrderCard key={o.id} order={o} onMarkDelivered={handleMarkDelivered}/>)}
+            </div>}
+          </div>
+        </div>;
+      }
+
+      function AnalyticsPanel({orders,inventory}){
+        const revenue=orders.filter(o=>o.status!=="pending").reduce((s,o)=>s+o.items.reduce((a,i)=>a+i.price*i.qty,0),0);
+        const count=orders.filter(o=>o.status!=="pending").length;
+        const pop={}; orders.forEach(o=>o.items.forEach(i=>{pop[i.name]=(pop[i.name]||0)+i.qty;}));
+        const sorted=Object.entries(pop).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        return <div className="glass" style={{borderRadius:20,padding:20,marginBottom:20}}>
+          <div style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:22,color:"var(--champagne)",marginBottom:14}}>📊 Quick Analytics</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:12}}>
+            <div className="glass" style={{borderRadius:14,padding:14,textAlign:"center"}}><div style={{fontSize:28}}>💰</div><div style={{fontSize:18,fontWeight:700,color:"var(--gold-bright)"}}>{CONFIG.currency}{revenue}</div><div style={{fontSize:11,color:"var(--muted)"}}>Revenue</div></div>
+            <div className="glass" style={{borderRadius:14,padding:14,textAlign:"center"}}><div style={{fontSize:28}}>📦</div><div style={{fontSize:18,fontWeight:700,color:"var(--gold-bright)"}}>{count}</div><div style={{fontSize:11,color:"var(--muted)"}}>Orders</div></div>
+            <div className="glass" style={{borderRadius:14,padding:14,textAlign:"center"}}><div style={{fontSize:28}}>📋</div><div style={{fontSize:18,fontWeight:700,color:"var(--gold-bright)"}}>{orders.filter(o=>o.status==="pending").length}</div><div style={{fontSize:11,color:"var(--muted)"}}>Pending</div></div>
+          </div>
+          <div style={{marginTop:14}}><div style={{fontSize:12,color:"var(--muted)",marginBottom:6}}>🔥 Popular Items:</div>
+            {sorted.map(([name,qty],i)=><div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"var(--champagne)",padding:"3px 0"}}><span>{name}</span><span style={{fontFamily:"var(--font-mono)",color:"var(--gold)"}}>{qty} sold</span></div>)}
+          </div>
+        </div>;
+      }
+
+      // MAIN CUSTOMER UI
+      return <div style={{minHeight:"100vh",minHeight:"100dvh",background:"var(--bg)",position:"relative"}}>
+        <div style={{position:"sticky",top:0,zIndex:40,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 20px",background:"rgba(11,9,10,0.9)",backdropFilter:"blur(14px)",borderBottom:"1px solid var(--line)"}}>
+          <span onClick={()=>{if(!activeOrder){setEntered(false);setTableId(null);setView("landing");}}} style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:20,color:"var(--gold-bright)",cursor:activeOrder?"default":"pointer"}}>{CONFIG.brandName}</span>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            {tableId&&<LoyaltyBadge points={loyaltyPoints}/>}
+            <button onClick={()=>{setPw("");setLoginErr("");setShowLogin(true);}} style={{background:"none",border:"none",color:"var(--muted)",fontSize:16,cursor:"pointer",opacity:0.4}} title="Staff">🔒</button>
+          </div>
+        </div>
+
+        {/* Login Modal */}
+        <AnimatePresence>{showLogin&&<motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>setShowLogin(false)} style={{position:"fixed",inset:0,background:"rgba(4,4,6,0.8)",zIndex:520,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+          <motion.div initial={{opacity:0,scale:0.9}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.9}} onClick={e=>e.stopPropagation()} className="glass-strong" style={{width:"min(300px,90vw)",borderRadius:20,padding:22}}>
+            <div style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:22,color:"var(--champagne)",marginBottom:14}}>Staff Access</div>
+            <input type="password" placeholder="Password" value={pw} onChange={e=>{setPw(e.target.value);setLoginErr("");}} onKeyDown={e=>e.key==="Enter"&&handleLogin()} style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid var(--line)",borderRadius:10,padding:"12px",color:"var(--champagne)",fontSize:15,marginBottom:8}}/>
+            {loginErr&&<div style={{color:"var(--amber)",fontSize:12,marginBottom:8}}>{loginErr}</div>}
+            <motion.button whileTap={{scale:0.95}} onClick={handleLogin} className="btn-gold" style={{width:"100%",borderRadius:12,padding:"12px 0",fontWeight:700,cursor:"pointer"}}>Login</motion.button>
+          </motion.div>
+        </motion.div>}</AnimatePresence>
+
+        <AnimatePresence>{scanningTable&&<motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{position:"fixed",inset:0,background:"rgba(11,9,10,0.95)",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column"}}>
+          <div style={{fontSize:60,marginBottom:10}}>🔍</div>
+          <div style={{fontFamily:"var(--font-mono)",color:"var(--gold-bright)",fontSize:28}}>Table {scanningTable}</div>
+          <div style={{color:"var(--muted)",fontSize:13,marginTop:8}}>Loading your menu...</div>
+        </motion.div>}</AnimatePresence>
+
+        {!entered?<div style={{maxWidth:600,margin:"0 auto",padding:"30px 20px 60px",textAlign:"center"}}>
+          <div style={{fontSize:80,marginBottom:10}}>☕</div>
+          <h1 style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:48,color:"var(--champagne)",margin:"6px 0"}}>{CONFIG.brandName}</h1>
+          <p style={{color:"var(--muted)",maxWidth:400,margin:"0 auto 24px",fontSize:16,lineHeight:1.6}}>Bespoke coffee, patisserie & small plates — plated fresh to order.</p>
+          <motion.button whileTap={{scale:0.94}} onClick={()=>setEntered(true)} className="btn-gold big-btn" style={{fontSize:20,padding:"18px 44px",borderRadius:60}}>🍽️ Order Now</motion.button>
+          <div style={{marginTop:30,color:"var(--muted)",fontSize:12}}>Open daily · 8:00 AM – 11:00 PM</div>
+        </div>:!tableId?<div style={{maxWidth:600,margin:"0 auto",padding:"20px 20px 60px",textAlign:"center"}}>
+          <div style={{fontSize:50,marginBottom:8}}>📷</div>
+          <h2 style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:32,color:"var(--champagne)"}}>Select Your Table</h2>
+          <p style={{color:"var(--muted)",fontSize:14,marginBottom:18}}>Scan the QR code or tap your table number.</p>
+          <motion.button whileTap={{scale:0.94}} onClick={()=>setScanOpen(true)} className="btn-gold big-btn" style={{fontSize:16,padding:"14px 30px",marginBottom:24}}>📷 Scan QR Code</motion.button>
+          <div className="glass" style={{borderRadius:20,padding:18}}>
+            <div style={{fontSize:13,color:"var(--muted)",marginBottom:12,fontFamily:"var(--font-mono)",letterSpacing:1}}>OR TAP TABLE NUMBER</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+              {Array.from({length:CONFIG.maxTables}).map((_,i)=>{const n=i+1;return<motion.button key={n} whileTap={{scale:0.9}} onClick={()=>handleSelectTable(n)} className="glass" style={{padding:"16px 0",borderRadius:14,fontFamily:"var(--font-mono)",fontSize:18,color:"var(--champagne)",cursor:"pointer",border:"1px solid var(--line)"}}>{String(n).padStart(2,"0")}</motion.button>;})}
+            </div>
+          </div>
+        </div>:view==="tracker"&&activeOrder?<TrackerView order={activeOrder} onCollapse={()=>setView("menu")} onAcknowledge={handleAcknowledge} onViewInvoice={()=>setInvoiceView(generateInvoice(activeOrder))}/>:
+        <div style={{maxWidth:1040,margin:"0 auto",padding:"12px 20px 120px"}}>
+          <div style={{display:"flex",gap:8,overflowX:"auto",padding:"6px 0",marginBottom:14}}>
+            {[{id:"all",name:"🌟 All",emoji:""},...FULL_MENU].map(c=><button key={c.id} onClick={()=>setActiveCat(c.id)} className={`tab-pill ${activeCat===c.id?"active":""}`}>{c.emoji} {c.name}</button>)}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))",gap:12}}>
+            {filteredMenu.map(item=><FoodCard key={item.id} item={item} onAdd={handleAdd} stock={inventory[item.id]}/>)}
+            {filteredMenu.length===0&&<div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"30px 0",fontSize:14}}>No items found 🔍</div>}
+          </div>
+        </div>}
+
+        {tableId&&view==="menu"&&!activeOrder&&<motion.div className="glass floating-cart" onClick={()=>setCartOpen(true)} whileTap={{scale:0.9}} ref={cartIconRef}><span>🛒</span><AnimatePresence>{cartCount>0&&<motion.span key={cartCount} initial={{scale:0}} animate={{scale:1}} exit={{scale:0}} className="badge">{cartCount}</motion.span>}</AnimatePresence></motion.div>}
+        <AnimatePresence>{activeOrder&&activeOrder.status!=="completed"&&view==="menu"&&<ActiveOrderBar order={activeOrder} onExpand={()=>setView("tracker")}/>}</AnimatePresence>
+
+        <CartDrawer open={cartOpen} cart={cart} notes={orderNotes} onNotesChange={setOrderNotes} onClose={()=>setCartOpen(false)} onQty={handleQty} onPlaceOrder={handlePlaceOrder} inventory={inventory}/>
+        <PaymentModal open={payModal} total={pendingTotal} orderIdHint={tableId?`T${tableId}`:null} onClose={()=>setPayModal(false)} onPayCash={()=>finalizeOrder("cash")} onPayOnline={(ref)=>finalizeOrder("online",ref)} onPayUPI={()=>finalizeOrder("upi")}/>
+        <QRScanModal open={scanOpen} onClose={()=>setScanOpen(false)} onDetected={n=>{setScanOpen(false);handleSelectTable(n);}}/>
+        {invoiceView&&<InvoiceView invoice={invoiceView} onClose={()=>setInvoiceView(null)} onPrint={()=>{const w=window.open("","_blank","width=420,height=600");w.document.write("<div class='invoice-card' style='font-family:monospace;padding:20px;'>"+document.querySelector(".invoice-card")?.innerHTML+"</div>");w.document.close();setTimeout(()=>w.print(),300);}}/>}
+        {confetti&&<ConfettiBurst/>}
+      </div>;
+    }
+
+    // Additional components for QR scanner etc. (kept same as previous, minor fixes)
+    function QRScanModal({open,onClose,onDetected}){
+      const videoRef=useRef(null); const canvasRef=useRef(null); const streamRef=useRef(null); const rafRef=useRef(null);
+      const [error,setError]=useState(""); const [manual,setManual]=useState(""); const doneRef=useRef(false);
+      useEffect(()=>{if(!open)return;setError("");setManual("");doneRef.current=false;let cancelled=false;
+        function parseCode(data){if(!data)return null;const byParam=data.match(/[?&]table=(\d{1,2})/);if(byParam)return parseInt(byParam[1],10);const bare=data.trim().match(/^(\d{1,2})$/);if(bare)return parseInt(bare[1],10);return null;}
+        function tick(){if(cancelled||doneRef.current)return;const video=videoRef.current,canvas=canvasRef.current;if(!video||!canvas||video.readyState!==video.HAVE_ENOUGH_DATA){rafRef.current=requestAnimationFrame(tick);return;}canvas.width=video.videoWidth;canvas.height=video.videoHeight;const ctx=canvas.getContext("2d");ctx.drawImage(video,0,0,canvas.width,canvas.height);try{const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);const code=window.jsQR&&window.jsQR(imgData.data,imgData.width,imgData.height);if(code&&code.data){const n=parseCode(code.data);if(n&&n>=1&&n<=CONFIG.maxTables){doneRef.current=true;onDetected(n);return;}}}catch(e){}rafRef.current=requestAnimationFrame(tick);}
+        async function start(){try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});if(cancelled){stream.getTracks().forEach(t=>t.stop());return;}streamRef.current=stream;if(videoRef.current){videoRef.current.srcObject=stream;await videoRef.current.play();}tick();}catch(e){setError("Camera unavailable — enter table number.");}}start();
+        return()=>{cancelled=true;if(rafRef.current)cancelAnimationFrame(rafRef.current);if(streamRef.current)streamRef.current.getTracks().forEach(t=>t.stop());};},[open]);
+      if(!open)return null;
+      return <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(4,4,6,0.9)",zIndex:530,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+        <motion.div initial={{opacity:0,scale:0.9,y:12}} animate={{opacity:1,scale:1,y:0}} exit={{opacity:0,scale:0.9,y:12}} onClick={e=>e.stopPropagation()} className="glass-strong" style={{width:"min(380px,94vw)",borderRadius:24,padding:22}}>
+          <button onClick={onClose} style={{position:"absolute",top:12,right:16,background:"none",border:"none",color:"var(--muted)",fontSize:22,cursor:"pointer",zIndex:2}}>×</button>
+          <div style={{fontFamily:"var(--font-display)",fontStyle:"italic",fontSize:22,color:"var(--champagne)",marginBottom:12,textAlign:"center"}}>📷 Scan Table QR</div>
+          {!error?<div className="scan-frame"><video ref={videoRef} muted playsInline style={{width:"100%",height:"100%",display:"block"}}/><div className="scan-overlay"/><div className="scan-hint">ALIGN QR WITHIN BOX</div></div>:
+          <div><div style={{color:"var(--muted)",fontSize:13,marginBottom:12,textAlign:"center"}}>{error}</div><input value={manual} onChange={e=>setManual(e.target.value.replace(/\D/g,"").slice(0,2))} placeholder="Enter table number" style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid var(--line)",borderRadius:12,padding:"14px",color:"var(--champagne)",fontFamily:"var(--font-mono)",fontSize:16,marginBottom:12,textAlign:"center"}}/><motion.button whileTap={{scale:0.95}} onClick={()=>{const n=parseInt(manual,10);if(n>=1&&n<=CONFIG.maxTables)onDetected(n);}} className="btn-gold big-btn" style={{width:"100%",borderRadius:14,padding:"14px 0"}}>Continue</motion.button></div>}
+          <canvas ref={canvasRef} style={{display:"none"}}/>
+        </motion.div>
+      </motion.div>;
+    }
+
+    function InvoiceView({invoice,onClose,onPrint}){
+      return <AnimatePresence><motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(4,4,6,0.8)",zIndex:550,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+        <motion.div initial={{opacity:0,scale:0.9}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.9}} onClick={e=>e.stopPropagation()} style={{maxWidth:420,width:"100%",maxHeight:"90vh",overflowY:"auto",borderRadius:16}}>
+          <div className="print-area invoice-card">
+            <div className="logo">{CONFIG.brandName}</div>
+            <div style={{textAlign:"center",fontSize:10,color:"#666"}}>GSTIN: {invoice.gstin}</div>
+            <div style={{textAlign:"center",fontSize:10,color:"#666"}}>{invoice.date} | Table: {invoice.tableId}</div>
+            <div style={{textAlign:"center",fontSize:10,color:"#666",marginBottom:8}}>Invoice #: {invoice.invoiceNo}</div>
+            <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>{invoice.items.map((i,idx)=><tr key={idx}><td>{i.name}</td><td>{i.qty}</td><td>{CONFIG.currency}{i.price}</td><td>{CONFIG.currency}{i.price*i.qty}</td></tr>)}</tbody></table>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#666"}}><span>Subtotal</span><span>{CONFIG.currency}{invoice.subtotal}</span></div>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#666"}}><span>CGST @{CONFIG.cgstRate}%</span><span>{CONFIG.currency}{invoice.cgst}</span></div>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#666"}}><span>SGST @{CONFIG.sgstRate}%</span><span>{CONFIG.currency}{invoice.sgst}</span></div>
+            <div className="total-row" style={{display:"flex",justifyContent:"space-between",marginTop:6,paddingTop:6,borderTop:"2px solid #1a1a1a"}}><span>GRAND TOTAL</span><span>{CONFIG.currency}{invoice.total}</span></div>
+            <div style={{textAlign:"center",fontSize:9,color:"#999",marginTop:8}}>Thank you! Visit again ❤️</div>
+          </div>
+          <div style={{display:"flex",gap:10,marginTop:12}}>
+            <motion.button whileTap={{scale:0.95}} onClick={onPrint} className="btn-gold" style={{flex:1,borderRadius:12,padding:"12px 0",fontWeight:700}}>🖨️ Print</motion.button>
+            <motion.button whileTap={{scale:0.95}} onClick={onClose} className="glass" style={{flex:1,borderRadius:12,padding:"12px 0",fontWeight:700,border:"1px solid var(--line)",color:"var(--champagne)"}}>Close</motion.button>
+          </div>
+        </motion.div>
+      </motion.div></AnimatePresence>;
+    }
+
+    function LoyaltyBadge({points}){
+      const level=points>=500?"🏆 Gold":points>=200?"⭐ Silver":"🌱 New";
+      return <div className="glass" style={{borderRadius:16,padding:"10px 16px",display:"inline-flex",alignItems:"center",gap:8,fontSize:13,color:"var(--champagne)"}}>{level} · <strong style={{color:"var(--gold-bright)"}}>{points} pts</strong></div>;
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>
